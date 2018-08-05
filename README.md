@@ -66,41 +66,43 @@ Also take note of the [InfluxDB UDP documentation][2].
 
 ## Tags
 
-The following fields will be added to every message:
+The following tags will be added to every message:
 
     host, level, level_name, logger
 
-The ``host`` is set to ``socket.gethostname()``, but can be overridden
-by setting ``localname`` or using the ``fqdn`` parameter.
+The ``host`` is set to ``socket.gethostname()``, but can be changed
+by setting ``fqdn``, or overriding it completly by providing ``localname``.
 ``level`` is the syslog level mapped to this message. ``level_name`` is
-the respective Python logging level name (``INFO``, ``ERROR`, etc.).
-The ``logger`` tag is the name of the Python logger.
+the respective Python logging level name (``INFO``, ``ERROR``, etc.).
+The ``logger`` tag is simply the name of the Python logger.
 
-It is possible to pass the ``global_tags`` parameter and configure a set of
-static tags that are added to every message. For example:
+It is possible to pass ``global_tags`` and thereby configure a set of
+static tags that are added to every message. For example, the following
+will put ``datacenter=us-west`` and ``app=snakeoil`` as global tags.
 
     handler = influxpy.UDPHandler("127.0.0.1", 8089, "",
                                   global_tags={
                                       "datacenter": "us-west",
-                                      "application": "snakeoil"})
+                                      "app": "snakeoil"})
 
 ## Fields
 
     message, full_message
 
-The ``full_message`` field is added only to messages where a exception
-traceback is available. For example, when using ``logger.exception()``
-or setting ``exec_info=1``.
+The ``full_message`` field is added only to messages for which an exception
+traceback is available. That is, when using ``logger.exception()``
+or setting ``exec_info=1`` explicitly.
 
 When ``debugging_fields`` is set to True, the following fields are added
-in addition:
+additionally:
 
     file, function, line, pid, process_name, thread_name
 
 When ``extra_fields`` is set to True, any extra fields on the ``LogRecord``
 instance are sent to InfluxDB. Adding extra fields can be achieved by
-passing the ``extra`` keyword argument to a logger call or using
-``logging.LoggerAdapter``, for example.
+passing the ``extra`` keyword argument to a logger call, or using
+``logging.LoggerAdapter``. See the Python logging documentation for
+more information.
 
     my_logger.debug("Login successful.", extra={"username": "John"})
     my_logger.info("It is warm.", extra={"temperature": 26.3})
