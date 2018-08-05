@@ -1,5 +1,7 @@
 # ``influxpy``
 
+[![Coverage Status](https://coveralls.io/repos/github/awelzel/influxpy/badge.svg?branch=master)](https://coveralls.io/github/awelzel/influxpy?branch=master) [![Build Status](https://travis-ci.org/awelzel/influxpy.svg?branch=master)](https://travis-ci.org/awelzel/influxpy)
+
 # About
 Python logging handler that sends messages to InfluxDB using the line protocol
 with support for UDP and decidedly not HTTP.

@@ -2,11 +2,11 @@
 from setuptools import setup, find_packages
 
 setup(
-
     name="influxpy",
-    version="0.0.1",
-    description="Python logging handler that sends messages to InfluxDB using the line protocol.",
-    keywords="logging influxdb udp tcp",
+    version="0.0.2",
+    description="Python logging handler that sends messages to InfluxDB using the line protocol over UDP.",
+    long_description=open("README.md").read(),
+    keywords="influxdb grafana logger logging udp",
     author="Arne Welzel",
     author_email="arne.welzel@gmail.com",
     url="https://github.com/awelzel/influxpy",
