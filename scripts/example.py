@@ -9,14 +9,14 @@ def main():
     parser.add_argument("--measurement", default="influxpy_logs")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8089)
-    parser.add_argument("--facility", default=None)
+    parser.add_argument("--app", default="example")
     args = parser.parse_args()
 
     my_logger = logging.getLogger("test_logger")
     my_logger.setLevel(logging.DEBUG)
 
     handler = influxpy.UDPHandler(args.host, args.port, args.measurement,
-                                  facility=args.facility)
+                                  global_tags={"app": args.app})
     my_logger.addHandler(handler)
 
     my_logger.debug("Hello InfluxDB.")

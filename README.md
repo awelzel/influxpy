@@ -3,10 +3,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/awelzel/influxpy/badge.svg?branch=master)](https://coveralls.io/github/awelzel/influxpy?branch=master) [![Build Status](https://travis-ci.org/awelzel/influxpy.svg?branch=master)](https://travis-ci.org/awelzel/influxpy)
 
 # About
-Python logging handler that sends messages to InfluxDB using the line protocol
-with support for UDP and decidedly not HTTP.
+Python logging handler that sends messages to InfluxDB via UDP using
+the line protocol. There is decidedly no support for the HTTP input.
 
-The code is heavily inspired by and based on [graypy][1].
+The code was heavily inspired by and based on [graypy][1].
 
 # Usage
 
@@ -18,8 +18,8 @@ The code is heavily inspired by and based on [graypy][1].
     my_logger = logging.getLogger("test_logger")
     my_logger.setLevel(logging.DEBUG)
 
-    handler = influxpy.UDPHandler("localhost", 8089, "example_logs",
-                                  facility="example")
+    handler = influxpy.UDPHandler("localhost", 8089, "influxpy_logs",
+                                  global_tags={"app": "example"})
     my_logger.addHandler(handler)
 
     my_logger.debug("Hello InfluxDB.")
@@ -54,35 +54,46 @@ Also take note of the [InfluxDB UDP documentation][2].
 
   * **host** - The host of the InfluxDB server.
   * **port** - The UDP port of the InfluxDB server.
-  * **debugging_fields** - send debug fields if true (the default).
+  * **measurement** - The name of the measurement/table in InfluxDB.
+  * **debugging_fields** -  Send debugging fields if set to True. Defaults is to not include debugging fields.
   * **extra_fields** - send extra fields on the log record to InfluxDB if true (the default).
   * **fqdn** - Use ``socket.getfqdn()`` instead of ``socket.gethostname()`` to set the source host.
   * **localname** - Use the specified hostname as source host.
-  * **facility** - Set facility. If unspecified, it is naively guessed from ``sys.argv[0]``.
+  * **global_tags** - optional dict of tags to add to every message.
 
 
 # Schema
 
 ## Tags
 
-    facility, host, level, level_name, logger
+The following fields will be added to every message:
 
-The ``facility`` field, in most cases, should be provided by the user.
-By default it will create a name from ``sys.argv[0]``, but setting it
-explicitly is most likely the better approach.
+    host, level, level_name, logger
 
 The ``host`` is set to ``socket.gethostname()``, but can be overridden
-by setting ``localname``.
+by setting ``localname`` or using the ``fqdn`` parameter.
+``level`` is the syslog level mapped to this message. ``level_name`` is
+the respective Python logging level name (``INFO``, ``ERROR`, etc.).
+The ``logger`` tag is the name of the Python logger.
+
+It is possible to pass the ``global_tags`` parameter and configure a set of
+static tags that are added to every message. For example:
+
+    handler = influxpy.UDPHandler("127.0.0.1", 8089, "",
+                                  global_tags={
+                                      "datacenter": "us-west",
+                                      "application": "snakeoil"})
 
 ## Fields
 
     message, full_message
 
-The ``full_message`` field is added only to messages with tracebacks.
-For example, when using ``logger.exception()`` or setting ``exec_info=1``.
+The ``full_message`` field is added only to messages where a exception
+traceback is available. For example, when using ``logger.exception()``
+or setting ``exec_info=1``.
 
-When ``debugging_fields`` is True (default), the following fields are added
-as well:
+When ``debugging_fields`` is set to True, the following fields are added
+in addition:
 
     file, function, line, pid, process_name, thread_name
 

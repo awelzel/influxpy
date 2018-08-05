@@ -1,6 +1,5 @@
 import logging
 import socket
-import sys
 import unittest
 from unittest import mock
 
@@ -36,21 +35,19 @@ class TestHandler(unittest.TestCase):
         self.assertRegex(data, " [0-9]{15,}$")
         self.assertIn("level_name=INFO", data)
         self.assertIn('message="Hello"', data)
-        self.assertIn('function="test__log_defaults"', data)
+        self.assertNotIn('function=', data)
 
-    def test__log_no_debugging_fields(self):
+    def test__log_debugging_fields_true(self):
         self.handler = UDPHandler("127 0 0 1", -1, "xyz",
-                                  debugging_fields=False,
+                                  debugging_fields=True,
                                   sock=self.sock_mock)
         self.logger.addHandler(self.handler)
         self.logger.info("A very long message.")
         self.sock_mock.sendto.assert_called_once()
         data, to = self.sock_mock.sendto.call_args[0]
         data = data.decode("utf-8")
-        self.assertRegex(data, "^xyz,")
-        self.assertRegex(data, " [0-9]{15,}$")
-        self.assertNotIn("pid=", data)
-        self.assertNotIn("function=", data)
+        self.assertIn("pid=", data)
+        self.assertIn('function="test_', data)
 
     def test__log_utf8_message(self):
         self.handler = UDPHandler("127 0 0 1", -1, "xyz",
@@ -125,11 +122,22 @@ class TestHandler(unittest.TestCase):
         self.assertNotIn('emails_processed', data)
         self.assertNotIn('disk_utilization', data)
 
-    def test__exception(self):
+    def test__global_tags(self):
+        self.handler = UDPHandler("127 0 0 1", -1, "X",
+                                  global_tags={
+                                    "datacenter": "us-west",
+                                  },
+                                  sock=self.sock_mock)
+        self.logger.addHandler(self.handler)
+        self.logger.info("I'm not the only one here!")
+        data, to = self.sock_mock.sendto.call_args[0]
+        data = data.decode("utf-8")
+        self.assertRegex(data, r'^[^ ]+datacenter=us-west.* .*[0-9]+$')
+
+    def test__log_exception(self):
         self.handler = UDPHandler("127 0 0 1", -1, "X",
                                   sock=self.sock_mock)
         self.logger.addHandler(self.handler)
-
         try:
             puff_the_magic_dragon()
         except NameError:
@@ -143,11 +151,6 @@ class TestHandler(unittest.TestCase):
         )
         self.assertIn(full_msg, data)
 
-    def test__bad_facility_magic(self):
-        argv0 = sys.argv[0]
-        try:
-            sys.argv[0] = "---"
-            with self.assertRaisesRegex(ValueError, "facility magic failed"):
-                UDPHandler("127 0 0 1", -1, "X")
-        finally:
-            sys.argv[0] = argv0
+    def test__using_reserved_global_tag_fails(self):
+        with self.assertRaisesRegex(ValueError, "host.*in global_tags impossible"):
+            UDPHandler("127 0 0 1", -1, "X", global_tags={"host": "reserved"})
