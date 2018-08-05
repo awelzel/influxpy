@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="influxpy",
-    version="0.1.0",
+    version="0.1.1",
     description="Python logging handler that sends messages to InfluxDB using the line protocol over UDP.",
     long_description=open("README.md").read(),
     keywords="influxdb grafana logger logging udp",
